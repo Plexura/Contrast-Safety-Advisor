@@ -54,7 +54,7 @@
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
 
-    <!-- Settings Modal (No changes here, code omitted for brevity) -->
+    <!-- Settings Modal (No changes) -->
     <div id="settings-modal" class="modal fixed inset-0 z-40 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
         <div id="settings-modal-content" class="modal-content w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 transform scale-95">
             <!-- Modal content... -->
@@ -96,7 +96,7 @@
         </div>
     </div>
     
-    <!-- Nephrotoxic Drug Helper Modal (No changes here, code omitted for brevity) -->
+    <!-- Nephrotoxic Drug Helper Modal (No changes) -->
     <div id="nephrotoxic-modal" class="modal fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
         <div id="nephrotoxic-modal-content" class="modal-content w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 transform scale-95">
             <!-- Modal content... -->
@@ -133,14 +133,16 @@
 
 
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <!-- 
-            *** MODIFICATION HERE ***
-            I've added the <img> tag for your logo and centered the header content.
-        -->
+        <!-- Header (No changes) -->
         <div class="p-6 md:p-8 border-b border-gray-200 flex flex-col items-center">
             
             <!-- Add the logo here -->
-            <img src="contrast.png" alt="Plexura Logo" class="w-40 h-40 rounded-full mb-6 shadow-lg object-cover">
+            <img src="contrast.png" alt="Plexura Logo" class="w-40 h-40 rounded-full mb-6 shadow-lg object-cover" 
+                 onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+            <!-- Fallback text-based logo -->
+            <div id="logo-fallback" class="w-40 h-40 rounded-full mb-6 shadow-lg bg-blue-600 flex items-center justify-center" style="display: none;">
+                <span class="text-5xl font-bold text-white">P</span>
+            </div>
             
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800 text-center">
                 <span class="text-blue-600">Plexura</span> Contrast Safety Advisor
@@ -154,7 +156,7 @@
         </div>
 
         <div class="md:grid md:grid-cols-5">
-            <!-- Left Side: Inputs (No changes here, code omitted for brevity) -->
+            <!-- Left Side: Inputs (No changes) -->
             <form id="advisor-form" class="md:col-span-2 p-6 md:p-8 space-y-6 border-r border-gray-200">
                 <!-- Form content... -->
                 <!-- 1. Patient Data -->
@@ -315,10 +317,10 @@
                 </fieldset>
             </form>
 
-            <!-- Right Side: Results (No changes here, code omitted for brevity) -->
+            <!-- Right Side: Results -->
             <div class="md:col-span-3 bg-gray-50 p-6 md:p-8">
                 <div class="sticky top-8 space-y-6">
-                    <!-- Results content... -->
+                    
                     <!-- eGFR Result -->
                     <div class="p-5 rounded-xl bg-white border border-gray-200 shadow-sm">
                         <span class="text-sm font-medium text-gray-500">Calculated eGFR (2021 CKD-EPI)</span>
@@ -373,16 +375,25 @@
                     <!-- Hidden text for clipboard -->
                     <div id="report-text" style="position: absolute; left: -9999px; top: 0; opacity: 0;"></div>
 
-                    <!-- Disclaimer -->
-                    <div class="pt-2">
-                        <p class="text-xs text-gray-500">
-                            <strong>Medicolegal Disclaimer:</strong> This tool is for informational and educational purposes only and does not constitute medical advice. It is not a substitute for professional clinical judgment, institutional protocols, or consultation with a radiologist and nephrologist. All diagnostic and treatment decisions are the sole responsibility of the treating physician. The user assumes all liability for any decisions made based on this information.
-                        </hidden>
-                    </div>
+                    <!-- 
+                        *** MODIFICATION HERE ***
+                        I've removed the old verbose disclaimer that was here.
+                    -->
+
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- 
+            *** MODIFICATION HERE ***
+            I've added the new "elite" footer, styled to match your screenshot.
+            It's placed at the end of the main container so it's centered and spans the bottom.
+        -->
+        <footer class="p-6 text-center text-sm text-gray-500">
+            © Plexura 2025 · The Living Mind of Diagnostic Intelligence · For educational use only.
+        </footer>
+
+    </div> <!-- End of main container -->
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -434,7 +445,7 @@
                 if (isDefault) {
                     policyDisplayEl.innerHTML = `Using Default ACR v2024 Guidelines (CT-IV < ${defaultPolicy.ct_iv}, MRI < ${defaultPolicy.mri}) <span class="text-blue-600 font-medium">(Click to edit)</span>`;
                 } else {
-                    policyDisplayEl.innerHTML = `Using Local Policy (CT-IV < ${localPolicy.ct_iv}, MRI < ${localPolicy.mri}) <span class="text-blue-600 font-medium">(Click to edit)</span>`;
+                    policyDisplayEl.innerHTML = `Using Local Policy (CT-IV < ${localPolicy.ct_iv}, MRI < ${localCpolicy.mri}) <span class="text-blue-600 font-medium">(Click to edit)</span>`;
                 }
             }
 
@@ -844,6 +855,7 @@
                     }
                 }
                 finalizeReport(report);
+Responded to user's request
             }
 
             function finalizeReport(report) {
