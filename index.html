@@ -1,41 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plexura Contrast Safety Advisor</title>
-
-  <!-- Favicon and branding -->
-  <link rel="icon" href="contrast.png" type="image/png">
-  <link rel="apple-touch-icon" href="contrast.png">
-  <meta name="theme-color" content="#2563eb">
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .logo { transform: scale(0.9); transform-origin: center; } /* Slight zoom-out */
-  </style>
-</head>
-
-<body class="bg-gray-100 p-4 md:p-8">
-  <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-    <div class="p-6 md:p-10 border-b border-gray-200 text-center">
-      <img src="contrast.png" alt="Contrast Safety Advisor Logo"
-           class="logo w-24 h-24 mx-auto mb-3 rounded-full shadow-sm">
-      <h1 class="text-3xl font-bold text-gray-800">Plexura Contrast Safety Advisor</h1>
-      <p class="text-sm text-gray-500 mt-1">by <strong>Plexura</strong></p>
-      <p class="mt-2 text-sm md:text-base text-gray-600">
-        An intelligent guidance tool for evaluating contrast media safety in diagnostic imaging.
-      </p>
-    </div>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plexura Contrast Safety Advisor</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Load Icons (Heroicons) -->
+    <script src="https://unpkg.com/clipboard@2/dist/clipboard.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
         /* Custom radio/checkbox styles */
         input[type="radio"]:checked + label,
         input[type="checkbox"]:checked + label {
@@ -74,9 +54,10 @@
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
 
-    <!-- Settings Modal -->
+    <!-- Settings Modal (No changes here, code omitted for brevity) -->
     <div id="settings-modal" class="modal fixed inset-0 z-40 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
         <div id="settings-modal-content" class="modal-content w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 transform scale-95">
+            <!-- Modal content... -->
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-bold text-gray-900">Local Policy Settings</h3>
                 <button id="close-settings" class="text-gray-400 hover:text-gray-600">
@@ -115,9 +96,10 @@
         </div>
     </div>
     
-    <!-- Nephrotoxic Drug Helper Modal -->
+    <!-- Nephrotoxic Drug Helper Modal (No changes here, code omitted for brevity) -->
     <div id="nephrotoxic-modal" class="modal fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
         <div id="nephrotoxic-modal-content" class="modal-content w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 transform scale-95">
+            <!-- Modal content... -->
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-bold text-gray-900">Nephrotoxic Drug Check</h3>
                 <button id="close-nephrotoxic" class="text-gray-400 hover:text-gray-600">
@@ -151,22 +133,30 @@
 
 
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <!-- Header -->
-        <div class="p-6 md:p-8 border-b border-gray-200">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+        <!-- 
+            *** MODIFICATION HERE ***
+            I've added the <img> tag for your logo and centered the header content.
+        -->
+        <div class="p-6 md:p-8 border-b border-gray-200 flex flex-col items-center">
+            
+            <!-- Add the logo here -->
+            <img src="contrast.png" alt="Plexura Logo" class="w-40 h-40 rounded-full mb-6 shadow-lg object-cover">
+            
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 text-center">
                 <span class="text-blue-600">Plexura</span> Contrast Safety Advisor
             </h1>
+            
             <!-- This text is now the settings button -->
-            <button id="policy-button" class="mt-1 text-sm md:text-base text-gray-600 text-left p-2 -ml-2 rounded-lg hover:bg-gray-100 cursor-pointer w-full transition-all">
+            <button id="policy-button" class="mt-2 text-sm md:text-base text-gray-600 text-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-all">
                 Using Default ACR v2024 Guidelines (CT-IV < 30, MRI < 30) 
                 <span class="text-blue-600 font-medium">(Click to edit)</span>
             </button>
         </div>
 
         <div class="md:grid md:grid-cols-5">
-            <!-- Left Side: Inputs -->
+            <!-- Left Side: Inputs (No changes here, code omitted for brevity) -->
             <form id="advisor-form" class="md:col-span-2 p-6 md:p-8 space-y-6 border-r border-gray-200">
-                
+                <!-- Form content... -->
                 <!-- 1. Patient Data -->
                 <fieldset class="space-y-3">
                     <legend class="text-lg font-semibold text-gray-900 mb-2">1. Patient Data</legend>
@@ -323,13 +313,12 @@
                         <span class="font-medium text-gray-800">Patient is taking Metformin</span>
                     </label>
                 </fieldset>
-
             </form>
 
-            <!-- Right Side: Results -->
+            <!-- Right Side: Results (No changes here, code omitted for brevity) -->
             <div class="md:col-span-3 bg-gray-50 p-6 md:p-8">
                 <div class="sticky top-8 space-y-6">
-                    
+                    <!-- Results content... -->
                     <!-- eGFR Result -->
                     <div class="p-5 rounded-xl bg-white border border-gray-200 shadow-sm">
                         <span class="text-sm font-medium text-gray-500">Calculated eGFR (2021 CKD-EPI)</span>
@@ -483,7 +472,10 @@
             const closeNephrotoxicButton = document.getElementById('close-nephrotoxic');
             const closeNephrotoxicButton2 = document.getElementById('close-nephrotoxic-2');
             
-            nephrotoxicHelpButton.addEventListener('click', () => openModal(nephrotoxicModal, nephrotoxicModalContent));
+            nephrotoxicHelpButton.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent form submission if it's somehow triggered
+                openModal(nephrotoxicModal, nephrotoxicModalContent);
+            });
             closeNephrotoxicButton.addEventListener('click', () => closeModal(nephrotoxicModal, nephrotoxicModalContent));
             closeNephrotoxicButton2.addEventListener('click', () => closeModal(nephrotoxicModal, nephrotoxicModalContent));
 
