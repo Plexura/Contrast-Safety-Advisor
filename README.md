@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="contrast.png" alt="Plexura Contrast Safety Advisor logo" width="160">
+</p>
 # ⚕️ Plexura Contrast Safety Advisor
 
 ### The Living Mind of Diagnostic Intelligence
