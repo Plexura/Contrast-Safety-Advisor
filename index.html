@@ -4,393 +4,756 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plexura Universal Safety Advisor</title>
-    <link href="tailwind.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- CDN Link for Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script> 
+
+    <!-- CDN Link for Clipboard.js -->
+    <script src="https://unpkg.com/clipboard@2/dist/clipboard.min.js"></script>
+
+    <!-- Font (Will load from Google Fonts) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="clipboard.min.js"></script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        
+        /* Custom Form Styles */
         input[type="radio"]:checked + label,
-        input[type="checkbox"]:checked + label { border-color: #2563eb; background-color: #eff6ff; }
-        input[type="radio"][data-risk="true"]:checked + label { border-color: #f59e0b; background-color: #fffbeb; }
-        input[type="radio"][data-danger="true"]:checked + label { border-color: #ef4444; background-color: #fef2f2; }
+        input[type="checkbox"]:checked + label { 
+            border-color: #2563eb; 
+            background-color: #eff6ff; 
+        }
+        
+        /* Risk Warning Styles */
+        input[type="radio"][data-risk="true"]:checked + label { 
+            border-color: #f59e0b; 
+            background-color: #fffbeb; 
+        }
+        
+        /* Danger Warning Styles */
+        input[type="radio"][data-danger="true"]:checked + label { 
+            border-color: #ef4444; 
+            background-color: #fef2f2; 
+        }
+        
         input[type="radio"], input[type="checkbox"] { display: none; }
+        
+        /* Result Card Themes */
         .result-safe { background-color: #f0fdf4; border-color: #22c55e; }
         .result-caution { background-color: #fffbeb; border-color: #f59e0b; }
         .result-danger { background-color: #fef2f2; border-color: #ef4444; }
-        .modal { transition: opacity 0.25s ease; }
-        .modal-content { transition: transform 0.25s ease; }
+        
+        /* Modal Transitions */
+        .modal { transition: opacity 0.2s ease; }
+        .modal-content { transition: transform 0.2s ease; }
+        
+        /* Header Interaction */
         #policy-button { transition: background-color 0.15s ease-in-out; }
     </style>
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
+<body class="bg-gray-100 p-4 md:p-8 text-gray-800">
 
-    <div id="settings-modal" class="modal fixed inset-0 z-40 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+    <!-- Settings Modal (Local Policy) -->
+    <div id="settings-modal" class="modal fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
         <div id="settings-modal-content" class="modal-content w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 transform scale-95">
-             <div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold text-gray-900">Local Policy Settings</h3><button id="close-settings" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
-            <p class="text-sm text-gray-600 mb-6">Set eGFR thresholds for "Moderate Risk" warnings.</p>
-            <div class="space-y-4">
-                <div><label for="ct-iv-threshold" class="block text-sm font-medium text-gray-700">CT (IV) Caution eGFR</label><input type="number" id="ct-iv-threshold" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="30"><p class="text-xs text-gray-500 mt-1">Default (ACR): 30</p></div>
-                <div><label for="ct-ia-other-threshold" class="block text-sm font-medium text-gray-700">CT (IA - Other) Caution eGFR</label><input type="number" id="ct-ia-other-threshold" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="40"><p class="text-xs text-gray-500 mt-1">Default (ACR): 40</p></div>
-                <div><label for="ct-ia-renal-threshold" class="block text-sm font-medium text-gray-700">CT (IA - Renal) Caution eGFR</label><input type="number" id="ct-ia-renal-threshold" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="60"><p class="text-xs text-gray-500 mt-1">Default (ACR): 60</p></div>
-                <div><label for="mri-threshold" class="block text-sm font-medium text-gray-700">MRI (GBCM) Caution eGFR</label><input type="number" id="mri-threshold" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="30"><p class="text-xs text-gray-500 mt-1">Default (ACR): 30</p></div>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Local Policy Settings</h3>
+                <button id="close-settings" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
             </div>
-            <div class="mt-6 flex justify-between items-center"><button id="reset-settings" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all">Reset to Default</button><button id="save-settings" class="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-sm font-medium hover:bg-blue-700 transition-all">Save and Close</button></div>
+            <p class="text-sm text-gray-600 mb-6">Set the eGFR thresholds that trigger "Moderate Risk" warnings in your department.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">CT (IV) Caution Threshold</label>
+                    <input type="number" id="ct-iv-threshold" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" placeholder="30">
+                    <p class="text-xs text-gray-500 mt-1">Default (ACR): 30</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">CT (IA - Other) Caution Threshold</label>
+                    <input type="number" id="ct-ia-other-threshold" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" placeholder="40">
+                    <p class="text-xs text-gray-500 mt-1">Default (ACR): 40</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">CT (IA - Renal) Caution Threshold</label>
+                    <input type="number" id="ct-ia-renal-threshold" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" placeholder="60">
+                    <p class="text-xs text-gray-500 mt-1">Default (ACR): 60</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">MRI (GBCM) Caution Threshold</label>
+                    <input type="number" id="mri-threshold" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" placeholder="30">
+                    <p class="text-xs text-gray-500 mt-1">Default (ACR): 30</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-between items-center">
+                <button id="reset-settings" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all">Reset to Default</button>
+                <button id="save-settings" class="px-5 py-2 bg-blue-600 text-white rounded-lg shadow-sm font-medium hover:bg-blue-700 transition-all">Save and Close</button>
+            </div>
         </div>
     </div>
 
+    <!-- Nephrotoxic Drug Helper Modal -->
     <div id="nephrotoxic-modal" class="modal fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
         <div id="nephrotoxic-modal-content" class="modal-content w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 transform scale-95">
-            <div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold text-gray-900">Nephrotoxic Drug Check</h3><button id="close-nephrotoxic" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
-            <p class="text-sm text-gray-600 mb-6">Ask about common classes. Check if patient takes *any* or if unsure.</p>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Nephrotoxic Drug Check</h3>
+                <button id="close-nephrotoxic" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <p class="text-sm text-gray-600 mb-6">Ask the patient about these common classes. If they take <strong>any</strong>, check the box.</p>
             <ul class="space-y-4 text-sm">
-                <li><strong class="font-semibold text-gray-800">1. NSAIDs:</strong><p class="text-gray-600">"Painkillers like Ibuprofen, Naproxen, Diclofenac?"</p></li>
-                <li><strong class="font-semibold text-gray-800">2. IV Antibiotics (Inpatients):</strong><p class="text-gray-600">Gentamicin, Amikacin, Tobramycin, Vancomycin?</p></li>
-                <li><strong class="font-semibold text-gray-800">3. Diuretics (Water Pills):</strong><p class="text-gray-600">"Furosemide (Lasix)?" (Risk via volume depletion).</p></li>
+                <li>
+                    <strong class="font-semibold text-gray-800">1. NSAIDs (Pain/Arthritis):</strong>
+                    <p class="text-gray-600">"Are you taking Ibuprofen (Advil), Naproxen (Aleve), or Diclofenac (Voltaren)?"</p>
+                </li>
+                <li>
+                    <strong class="font-semibold text-gray-800">2. Strong IV Antibiotics (Inpatients):</strong>
+                    <p class="text-gray-600">Gentamicin, Amikacin, Tobramycin, Vancomycin?</p>
+                </li>
+                <li>
+                    <strong class="font-semibold text-gray-800">3. Diuretics (Water Pills):</strong>
+                    <p class="text-gray-600">"Furosemide (Lasix)?" (Risk via dehydration/volume depletion).</p>
+                </li>
             </ul>
             <button id="close-nephrotoxic-2" class="mt-6 w-full px-5 py-2 bg-blue-600 text-white rounded-lg shadow-sm font-medium hover:bg-blue-700 transition-all">Close</button>
         </div>
     </div>
 
-     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="p-6 md:p-8 border-b border-gray-200 flex flex-col items-center">
-            <img src="contrast.png" alt="Plexura Logo" class="w-40 h-40 rounded-full mb-6 shadow-lg object-cover" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
-            <div id="logo-fallback" class="w-40 h-40 rounded-full mb-6 shadow-lg bg-blue-600 flex items-center justify-center" style="display: none;"><span class="text-5xl font-bold text-white">P</span></div>
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 text-center"><span class="text-blue-600">Plexura</span> Universal Safety Advisor</h1>
-            <button id="policy-button" class="mt-2 text-sm md:text-base text-gray-600 text-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-all">Using Default ACR v2024 Guidelines <span class="text-blue-600 font-medium">(Click to edit)</span></button>
+    <!-- Main Tool Container -->
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        
+        <!-- Header -->
+        <div class="p-6 md:p-8 border-b border-gray-200 flex flex-col items-center text-center">
+            <!-- Logo with Fallback -->
+            <img src="contrast.png" alt="Plexura Logo" class="w-40 h-40 rounded-full mb-6 shadow-lg object-cover" 
+                 onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+            <div id="logo-fallback" class="w-40 h-40 rounded-full mb-6 shadow-lg bg-gray-800 flex items-center justify-center hidden">
+                <span class="text-4xl font-bold text-white">Plexura</span>
+            </div>
+            
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+                <span class="text-blue-600">Plexura</span> Universal Safety Advisor
+            </h1>
+            
+            <!-- Interactive Policy Display (No Floating Icon) -->
+            <button id="policy-button" class="mt-2 text-sm md:text-base text-gray-500 hover:text-blue-600 hover:bg-blue-50 px-3 py-1 rounded-full transition-colors cursor-pointer">
+                Using Default ACR v2024 Guidelines <span class="font-semibold text-xs align-top ml-1">EDIT</span>
+            </button>
         </div>
 
         <div class="md:grid md:grid-cols-5">
-            <form id="advisor-form" class="md:col-span-2 p-6 md:p-8 space-y-6 border-r border-gray-200">
-                <fieldset class="space-y-3">
-                    <legend class="text-lg font-semibold text-gray-900 mb-2">1. Patient Data</legend>
-                    <div><label for="creatinine" class="block text-sm font-medium text-gray-700">Serum Creatinine</label><div class="mt-1 flex rounded-md shadow-sm"><input type="number" id="creatinine" min="0.1" max="30" step="0.01" class="flex-1 block w-full rounded-none rounded-l-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="1.2" required><span class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">mg/dL</span></div></div>
-                    <div><label for="age" class="block text-sm font-medium text-gray-700">Age</label><input type="number" id="age" min="1" max="120" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="65" required></div>
-                    <div><label class="block text-sm font-medium text-gray-700">Sex</label><div class="mt-1 grid grid-cols-2 gap-3"><input type="radio" name="sex" value="female" id="sex-female"><label for="sex-female" class="flex items-center justify-center w-full p-3 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="text-gray-700 font-medium">Female</span></label><input type="radio" name="sex" value="male" id="sex-male" checked><label for="sex-male" class="flex items-center justify-center w-full p-3 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="text-gray-700 font-medium">Male</span></label></div></div>
-                </fieldset>
-                <fieldset class="space-y-3">
-                    <legend class="text-lg font-semibold text-gray-900 mb-2">2. Procedure</legend>
-                    <input type="radio" name="procedure" value="ct" id="proc-ct" checked><label for="proc-ct" class="flex items-center justify-between w-full p-4 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">CT w/ Iodinated Contrast</span></label>
-                    <div id="ct-options" class="space-y-3 pt-2 pl-4 border-l-2 border-blue-200"> <label class="block text-sm font-medium text-gray-700">CT Route:</label><input type="radio" name="ct_route" value="iv" id="ct-iv" checked><label for="ct-iv" class="flex flex-col w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">IV</span><span class="text-sm text-gray-600">Std CT, CTU</span></label><input type="radio" name="ct_route" value="ia_other" id="ct-ia-other"><label for="ct-ia-other" class="flex flex-col w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">IA - Other</span><span class="text-sm text-gray-600">High vol (PCI, Cerebral)</span></label><input type="radio" name="ct_route" value="ia_renal" id="ct-ia-renal"><label for="ct-ia-renal" class="flex flex-col w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">IA - Renal</span><span class="text-sm text-gray-600">Highest risk (Renal Angio)</span></label></div>
-                    <input type="radio" name="procedure" value="mri" id="proc-mri"><label for="proc-mri" class="flex items-center justify-between w-full p-4 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">MRI w/ Gadolinium Contrast</span></label>
-                    <div id="mri-options" class="hidden space-y-3 pt-2 pl-4 border-l-2 border-blue-200"><label class="block text-sm font-medium text-gray-700">GBCM Type:</label><input type="radio" name="gbcm" value="group1" id="gbcm-g1" data-danger="true"><label for="gbcm-g1" class="flex flex-col w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Group I (Highest Risk NSF)</span><span class="text-sm text-gray-600">e.g., Magnevist</span></label><input type="radio" name="gbcm" value="group2" id="gbcm-g2" checked><label for="gbcm-g2" class="flex flex-col w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Group II (Lowest Risk NSF)</span><span class="text-sm text-gray-600">e.g., Gadavist</span></label><input type="radio" name="gbcm" value="group3" id="gbcm-g3" data-danger="true"><label for="gbcm-g3" class="flex flex-col w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Group III (Limited Data)</span><span class="text-sm text-gray-600">e.g., Eovist</span></label></div>
-                </fieldset>
-                <fieldset class="space-y-4 pt-4 border-t border-gray-200">
-                    <legend class="text-lg font-semibold text-gray-900 mb-2">3. Clinical Safety Checklist<span class="block text-sm text-gray-500 font-normal">Defaults set for low-risk. Please verify.</span></legend>
-                    <div><label class="block text-sm font-medium text-gray-700">Previous Reaction?</label><div class="mt-2 grid grid-cols-2 gap-3"><input type="radio" name="reaction" value="no" id="reaction-no" checked><label for="reaction-no" class="text-center w-full p-3 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-50 text-gray-700 font-medium">No / Unknown</label><input type="radio" name="reaction" value="yes" id="reaction-yes" data-danger="true"><label for="reaction-yes" class="text-center w-full p-3 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-50 text-gray-700 font-medium">Yes (Mod/Severe)</label></div></div>
-                    <div><label class="block text-sm font-medium text-gray-700">ASA Fasting? <span class="font-normal">(6h solids/2h clears)</span></label><div class="mt-2 grid grid-cols-2 gap-3"><input type="radio" name="fasting" value="yes" id="fasting-yes" checked><label for="fasting-yes" class="text-center w-full p-3 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-50 text-gray-700 font-medium">Yes (Compliant)</label><input type="radio" name="fasting" value="no" id="fasting-no" data-risk="true"><label for="fasting-no" class="text-center w-full p-3 rounded-md border border-gray-300 cursor-pointer hover:bg-gray-50 text-gray-700 font-medium">No (Not Compliant)</label></div></div>
-                    <input type="checkbox" id="is-metformin" name="is-metformin"><label for="is-metformin" class="flex items-center justify-between w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Patient on Metformin</span></label>
-                    <div><input type="checkbox" id="is-nephrotoxic" name="is-nephrotoxic"><label for="is-nephrotoxic" class="flex items-center justify-between w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Patient on High-Risk Nephrotoxins</span></label><span id="nephrotoxic-help" class="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-medium pl-1">Common Examples?</span></div>
-                    <input type="checkbox" id="is-single-kidney" name="is-single-kidney"><label for="is-single-kidney" class="flex items-center justify-between w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Single Kidney</span></label>
-                    <div id="pregnancy-option-container" class="hidden"><input type="checkbox" id="is-pregnant" name="is-pregnant"><label for="is-pregnant" class="flex items-center justify-between w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-red-700">Patient is Pregnant</span><svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display: none;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></label></div>
-                </fieldset>
-                <fieldset class="space-y-3 pt-4 border-t border-gray-200">
-                    <legend class="text-lg font-semibold text-gray-900 mb-2">4. Renal Status</legend>
-                    <input type="radio" name="status" value="standard" id="status-standard" checked><label for="status-standard" class="flex flex-col w-full p-4 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Standard Patient</span><span class="text-sm text-gray-600">Stable/unknown baseline.</span></label>
-                    <input type="radio" name="status" value="aki" id="status-aki" data-danger="true"><label for="status-aki" class="flex flex-col w-full p-4 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Acute Kidney Injury (AKI)</span><span class="text-sm text-gray-600">Unstable renal function.</span></label>
-                    <input type="radio" name="status" value="dialysis" id="status-dialysis" data-risk="true"><label for="status-dialysis" class="flex flex-col w-full p-4 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Patient on Dialysis (ESRD)</span><span class="text-sm text-gray-600">e.g., HD or PD.</span></label>
-                    <div id="dialysis-options" class="hidden space-y-3 pt-2 pl-4 border-l-2 border-blue-200"><label class="block text-sm font-medium text-gray-700">Dialysis Workflow (MRI only):</label><input type="checkbox" id="dialysis-high-dose" name="dialysis-high-dose"><label for="dialysis-high-dose" class="flex items-center justify-between w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">High Dose MRI?</span></label><input type="checkbox" id="dialysis-delayed" name="dialysis-delayed"><label for="dialysis-delayed" class="flex items-center justify-between w-full p-3 rounded-lg border border-gray-300 cursor-pointer hover:bg-gray-50 transition-all"><span class="font-medium text-gray-800">Next Dialysis > 24h Post?</span></label></div>
-                </fieldset>
-            </form>
-
-            <div class="md:col-span-3 bg-gray-50 p-6 md:p-8">
-                <div class="sticky top-8 space-y-6">
-                    <div class="p-5 rounded-xl bg-white border border-gray-200 shadow-sm"><span class="text-sm font-medium text-gray-500">Calculated eGFR (2021 CKD-EPI)</span><p id="egfr-result" class="text-4xl font-bold text-blue-600">--</p><p class="text-sm text-gray-500">mL/min/1.73m²</p></div>
-                    <div id="result-card" class="p-5 rounded-xl border-2 result-caution">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-1">Risk Profile</h3><p id="risk-profile" class="text-xl font-bold text-yellow-700">AWAITING INPUT</p>
-                        <hr class="my-4 border-gray-300">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Final Recommendation</h3><p id="recommendation" class="text-gray-800 font-medium">Please enter patient data and verify safety checklist.</p>
-                        <div id="guidance-main" class="mt-4 hidden"><h4 class="font-semibold text-gray-800">Primary Advisory:</h4><p id="guidance-main-text" class="text-sm text-gray-700"></p></div>
-                        <div id="guidance-renal" class="mt-4 hidden"><h4 class="font-semibold text-gray-800">Renal Advisory:</h4><p id="renal-text" class="text-sm text-gray-700"></p></div>
-                        <div id="guidance-metformin" class="mt-4 hidden"><h4 class="font-semibold text-gray-800">Metformin Advisory (ACR):</h4><p id="metformin-text" class="text-sm text-gray-700"></p></div>
-                        <div id="guidance-alternatives" class="mt-4 hidden"><h4 class="font-semibold text-gray-800">Alternative Pathways:</h4><p id="alternatives-text" class="text-sm text-gray-700"></p>
+            
+            <!-- LEFT COLUMN: INPUTS -->
+            <form id="advisor-form" class="md:col-span-2 p-6 md:p-8 space-y-8 border-r border-gray-200">
+                
+                <!-- Section 1: Patient Data -->
+                <fieldset class="space-y-4">
+                    <legend class="text-lg font-bold text-gray-900 border-b pb-1 w-full">1. Patient Data</legend>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Creatinine</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <input type="number" id="creatinine" min="0.1" max="30" step="0.01" class="flex-1 block w-full rounded-l-md border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="1.2" required>
+                                <span class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">mg/dL</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Age</label>
+                            <input type="number" id="age" min="1" max="120" step="1" class="mt-1 block w-full rounded-md border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="65" required>
                         </div>
                     </div>
-                    <button id="copy-button" data-clipboard-target="#report-text" class="w-full flex items-center justify-center p-4 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-all shadow-sm">
-                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 018.5 2h3.879a1.5 1.5 0 011.06.44l3.122 3.12A1.5 1.5 0 0117 6.622V17.5a1.5 1.5 0 01-1.5 1.5h-7A1.5 1.5 0 017 17.5v-14z" /><path d="M5 4.5A1.5 1.5 0 016.5 3H7v14.5A1.5 1.5 0 015.5 19h-2A1.5 1.5 0 012 17.5v-11A1.5 1.5 0 013.5 5H5v-.5z" /></svg>
-                        Copy for Report
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sex</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="radio" name="sex" value="male" id="sex-male" checked>
+                            <label for="sex-male" class="text-center py-2 border rounded-md cursor-pointer font-medium text-gray-700 hover:bg-gray-50">Male</label>
+                            
+                            <input type="radio" name="sex" value="female" id="sex-female">
+                            <label for="sex-female" class="text-center py-2 border rounded-md cursor-pointer font-medium text-gray-700 hover:bg-gray-50">Female</label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Section 2: Procedure -->
+                <fieldset class="space-y-4">
+                    <legend class="text-lg font-bold text-gray-900 border-b pb-1 w-full">2. Procedure</legend>
+                    
+                    <!-- CT Option -->
+                    <input type="radio" name="procedure" value="ct" id="proc-ct" checked>
+                    <label for="proc-ct" class="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <span class="font-bold text-gray-800">CT (Iodinated Contrast)</span>
+                    </label>
+                    
+                    <!-- CT Sub-options -->
+                    <div id="ct-options" class="ml-4 pl-4 border-l-2 border-blue-100 space-y-2">
+                        <input type="radio" name="ct_route" value="iv" id="ct-iv" checked>
+                        <label for="ct-iv" class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                            <span class="block font-medium text-gray-900">Intravenous (IV)</span>
+                            <span class="block text-xs text-gray-500">Standard CT, CTU</span>
+                        </label>
+
+                        <input type="radio" name="ct_route" value="ia_other" id="ct-ia-other">
+                        <label for="ct-ia-other" class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                            <span class="block font-medium text-gray-900">IA - Other (High Volume)</span>
+                            <span class="block text-xs text-gray-500">PCI, Cerebral, Peripheral</span>
+                        </label>
+
+                        <input type="radio" name="ct_route" value="ia_renal" id="ct-ia-renal">
+                        <label for="ct-ia-renal" class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                            <span class="block font-medium text-gray-900">IA - Renal First-Pass</span>
+                            <span class="block text-xs text-gray-500">Renal Angio (Highest Risk)</span>
+                        </label>
+                    </div>
+
+                    <!-- MRI Option -->
+                    <input type="radio" name="procedure" value="mri" id="proc-mri">
+                    <label for="proc-mri" class="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <span class="font-bold text-gray-800">MRI (Gadolinium)</span>
+                    </label>
+
+                    <!-- MRI Sub-options -->
+                    <div id="mri-options" class="ml-4 pl-4 border-l-2 border-blue-100 space-y-2 hidden">
+                        <input type="radio" name="gbcm" value="group2" id="gbcm-g2" checked>
+                        <label for="gbcm-g2" class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                            <span class="block font-medium text-gray-900">Group II (Macrocyclic)</span>
+                            <span class="block text-xs text-gray-500">Gadavist, Dotarem (Low Risk)</span>
+                        </label>
+
+                        <input type="radio" name="gbcm" value="group1" id="gbcm-g1" data-danger="true">
+                        <label for="gbcm-g1" class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                            <span class="block font-medium text-gray-900">Group I (Linear)</span>
+                            <span class="block text-xs text-gray-500">Magnevist (High NSF Risk)</span>
+                        </label>
+                        
+                        <input type="radio" name="gbcm" value="group3" id="gbcm-g3" data-danger="true">
+                        <label for="gbcm-g3" class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                            <span class="block font-medium text-gray-900">Group III (Linear)</span>
+                            <span class="block text-xs text-gray-500">Eovist (Limited Data)</span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <!-- Section 3: Safety Checklist (The "Elite" Feature) -->
+                <fieldset class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <legend class="text-lg font-bold text-gray-900 border-b pb-1 w-full">3. Clinical Safety Checklist</legend>
+                    <p class="text-xs text-gray-500 mb-2">Defaults are set for a standard, low-risk patient. Verify all.</p>
+
+                    <!-- Reaction -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Prior Contrast Reaction?</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="radio" name="reaction" value="no" id="reaction-no" checked>
+                            <label for="reaction-no" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">No / Unknown</label>
+                            
+                            <input type="radio" name="reaction" value="yes" id="reaction-yes" data-danger="true">
+                            <label for="reaction-yes" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">Yes (Mod/Severe)</label>
+                        </div>
+                    </div>
+
+                    <!-- Fasting -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ASA Fasting Compliant? <span class="font-normal text-gray-500">(6h solids / 2h clears)</span></label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="radio" name="fasting" value="yes" id="fasting-yes" checked>
+                            <label for="fasting-yes" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">Yes</label>
+                            
+                            <input type="radio" name="fasting" value="no" id="fasting-no" data-risk="true">
+                            <label for="fasting-no" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">No</label>
+                        </div>
+                    </div>
+
+                    <!-- Comorbidities -->
+                    <div class="space-y-2">
+                        <input type="checkbox" id="is-metformin" name="is-metformin">
+                        <label for="is-metformin" class="flex justify-between items-center p-3 border rounded-md bg-white cursor-pointer hover:bg-gray-50">
+                            <span class="font-medium text-gray-800 text-sm">Taking Metformin</span>
+                        </label>
+
+                        <div>
+                            <input type="checkbox" id="is-nephrotoxic" name="is-nephrotoxic">
+                            <label for="is-nephrotoxic" class="flex justify-between items-center p-3 border rounded-md bg-white cursor-pointer hover:bg-gray-50">
+                                <span class="font-medium text-gray-800 text-sm">High-Risk Nephrotoxins</span>
+                            </label>
+                            <button id="nephrotoxic-help" class="text-xs text-blue-600 font-medium mt-1 ml-1 hover:underline">What does this include?</button>
+                        </div>
+
+                        <input type="checkbox" id="is-single-kidney" name="is-single-kidney">
+                        <label for="is-single-kidney" class="flex justify-between items-center p-3 border rounded-md bg-white cursor-pointer hover:bg-gray-50">
+                            <span class="font-medium text-gray-800 text-sm">Single Kidney</span>
+                        </label>
+
+                        <!-- Pregnancy (Contingent) -->
+                        <div id="pregnancy-container" class="hidden">
+                            <input type="checkbox" id="is-pregnant" name="is-pregnant">
+                            <label for="is-pregnant" class="flex justify-between items-center p-3 border rounded-md bg-white cursor-pointer hover:bg-gray-50 border-red-200">
+                                <span class="font-bold text-red-700 text-sm">Patient is Pregnant</span>
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Section 4: Renal Status -->
+                <fieldset class="space-y-3">
+                    <legend class="text-lg font-bold text-gray-900 border-b pb-1 w-full">4. Renal Status</legend>
+                    
+                    <input type="radio" name="status" value="standard" id="status-standard" checked>
+                    <label for="status-standard" class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                        <span class="block font-medium text-gray-900">Standard Patient</span>
+                        <span class="block text-xs text-gray-500">Stable or unknown baseline</span>
+                    </label>
+
+                    <input type="radio" name="status" value="aki" id="status-aki" data-danger="true">
+                    <label for="status-aki" class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                        <span class="block font-bold text-gray-900">Acute Kidney Injury (AKI)</span>
+                        <span class="block text-xs text-gray-500">Current, unstable renal failure</span>
+                    </label>
+
+                    <input type="radio" name="status" value="dialysis" id="status-dialysis" data-risk="true">
+                    <label for="status-dialysis" class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                        <span class="block font-bold text-gray-900">On Dialysis (ESRD)</span>
+                    </label>
+
+                    <!-- Dialysis Detail (MRI Only) -->
+                    <div id="dialysis-options" class="hidden ml-4 pl-4 border-l-2 border-blue-100 space-y-2">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Dialysis Workflow (MRI)</p>
+                        <input type="checkbox" id="dialysis-high-dose" name="dialysis-high-dose">
+                        <label for="dialysis-high-dose" class="block p-2 border rounded-md bg-white cursor-pointer text-sm">High Dose? (e.g. MRA)</label>
+                        
+                        <input type="checkbox" id="dialysis-delayed" name="dialysis-delayed">
+                        <label for="dialysis-delayed" class="block p-2 border rounded-md bg-white cursor-pointer text-sm">Next Dialysis > 24h?</label>
+                    </div>
+                </fieldset>
+
+            </form>
+
+            <!-- RIGHT COLUMN: RESULTS -->
+            <div class="md:col-span-3 bg-gray-50 p-6 md:p-8 flex flex-col">
+                <div class="sticky top-8 space-y-6">
+                    
+                    <!-- eGFR Box -->
+                    <div class="bg-white p-6 rounded-xl border shadow-sm">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Calculated eGFR (2021 CKD-EPI)</p>
+                        <div class="flex items-baseline mt-1">
+                            <span id="egfr-result" class="text-4xl font-extrabold text-blue-600">--</span>
+                            <span class="ml-2 text-sm text-gray-500">mL/min/1.73m²</span>
+                        </div>
+                    </div>
+
+                    <!-- Recommendation Card -->
+                    <div id="result-card" class="bg-white p-6 rounded-xl border-2 result-caution shadow-md">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Risk Profile</p>
+                        <h2 id="risk-profile" class="text-2xl font-bold text-yellow-700 mb-4">AWAITING INPUT</h2>
+                        
+                        <div class="border-t border-gray-200 pt-4">
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Final Recommendation</p>
+                            <p id="recommendation" class="text-lg font-medium text-gray-900">Please enter patient data.</p>
+                        </div>
+
+                        <!-- Dynamic Guidance Blocks -->
+                        <div class="mt-4 space-y-3">
+                            <div id="guidance-main" class="hidden p-3 bg-white rounded border border-gray-200">
+                                <span class="font-bold text-gray-800 block text-sm mb-1">Primary Advisory:</span>
+                                <span class="text-sm text-gray-700"></span>
+                            </div>
+                            <div id="guidance-renal" class="hidden p-3 bg-white rounded border border-gray-200">
+                                <span class="font-bold text-gray-800 block text-sm mb-1">Renal Advisory:</span>
+                                <span class="text-sm text-gray-700"></span>
+                            </div>
+                            <div id="guidance-metformin" class="hidden p-3 bg-white rounded border border-gray-200">
+                                <span class="font-bold text-gray-800 block text-sm mb-1">Metformin Action:</span>
+                                <span class="text-sm text-gray-700"></span>
+                            </div>
+                            <div id="guidance-alternatives" class="hidden p-3 bg-white rounded border border-gray-200">
+                                <span class="font-bold text-gray-800 block text-sm mb-1">Alternatives:</span>
+                                <span class="text-sm text-gray-700"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Copy Button -->
+                    <button id="copy-button" data-clipboard-target="#report-text" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition-colors flex items-center justify-center">
+                        <span id="copy-icon" class="mr-2">📋</span> Copy Summary for Report
                     </button>
-                    <span id="copy-success" class="hidden"></span>
-                    <div id="report-text" style="position: absolute; left: -9999px; top: 0; opacity: 0;"></div>
+                    
+                    <!-- Hidden Report Text -->
+                    <div id="report-text" class="absolute opacity-0 pointer-events-none"></div>
+
                 </div>
             </div>
         </div>
-        <footer class="p-6 text-center text-sm text-gray-500">
-            © Plexura 2025 · The Living Mind of Diagnostic Intelligence · For educational use only.
-            <span class="mx-1">|</span>
-            <a href="contrast-reference.pdf" target="_blank" class="text-blue-600 hover:underline">Reference Document</a>
+
+        <!-- Footer -->
+        <footer class="bg-gray-50 border-t p-6 text-center text-xs text-gray-500">
+            <p>© Plexura 2025 · The Living Mind of Diagnostic Intelligence</p>
+            <p class="mt-1">
+                <a href="contrast-reference.pdf" target="_blank" class="text-blue-600 hover:underline font-medium">View Reference Document</a>
+                <span class="mx-1">•</span>
+                For educational use only.
+            </p>
         </footer>
     </div>
 
+    <!-- Application Logic -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- Default Policy ---
-            const defaultPolicy = { ct_iv: 30, ct_ia_other: 40, ct_ia_renal: 60, mri: 30 };
-            let localPolicy = JSON.parse(localStorage.getItem('plexuraPolicy')) || { ...defaultPolicy };
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // --- 1. Policy Management ---
+        const defaultPolicy = { ct_iv: 30, ct_ia_other: 40, ct_ia_renal: 60, mri: 30 };
+        let localPolicy = JSON.parse(localStorage.getItem('plexuraPolicy')) || { ...defaultPolicy };
 
-            // --- Modal Functions ---
-            const openModal = (modal, content) => { modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10); };
-            const closeModal = (modal, content) => { modal.classList.add('opacity-0'); content.classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 250); };
+        // DOM Elements for Settings
+        const policyButton = document.getElementById('policy-button');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsContent = document.getElementById('settings-modal-content');
+        const closeSettings = document.getElementById('close-settings');
+        const saveSettings = document.getElementById('save-settings');
+        const resetSettings = document.getElementById('reset-settings');
+        
+        // Modal Logic
+        function openModal(m, c) { m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); c.classList.remove('scale-95'); }, 10); }
+        function closeModal(m, c) { m.classList.add('opacity-0'); c.classList.add('scale-95'); setTimeout(() => m.classList.add('hidden'), 200); }
 
-            // --- Settings Modal Elements & Logic ---
-            const policyButton = document.getElementById('policy-button');
-            const settingsModal = document.getElementById('settings-modal');
-            const settingsModalContent = document.getElementById('settings-modal-content');
-            const closeSettingsButton = document.getElementById('close-settings');
-            const saveSettingsButton = document.getElementById('save-settings');
-            const resetSettingsButton = document.getElementById('reset-settings');
-            const policyDisplayEl = document.getElementById('policy-button');
-            const ctIvThresholdEl = document.getElementById('ct-iv-threshold');
-            const ctIaOtherThresholdEl = document.getElementById('ct-ia-other-threshold');
-            const ctIaRenalThresholdEl = document.getElementById('ct-ia-renal-threshold');
-            const mriThresholdEl = document.getElementById('mri-threshold');
+        policyButton.onclick = () => {
+            document.getElementById('ct-iv-threshold').value = localPolicy.ct_iv;
+            document.getElementById('ct-ia-other-threshold').value = localPolicy.ct_ia_other;
+            document.getElementById('ct-ia-renal-threshold').value = localPolicy.ct_ia_renal;
+            document.getElementById('mri-threshold').value = localPolicy.mri;
+            openModal(settingsModal, settingsContent);
+        };
+        closeSettings.onclick = () => closeModal(settingsModal, settingsContent);
 
-            function updatePolicyDisplay() {
-                const isDefault = Object.keys(defaultPolicy).every(key => localPolicy[key] === defaultPolicy[key]);
-                policyDisplayEl.innerHTML = `Using ${isDefault ? 'Default ACR v2024' : 'Local'} Guidelines (CT-IV < ${localPolicy.ct_iv}, MRI < ${localPolicy.mri}) <span class="text-blue-600 font-medium">(Click to edit)</span>`;
+        saveSettings.onclick = () => {
+            localPolicy.ct_iv = parseInt(document.getElementById('ct-iv-threshold').value) || 30;
+            localPolicy.ct_ia_other = parseInt(document.getElementById('ct-ia-other-threshold').value) || 40;
+            localPolicy.ct_ia_renal = parseInt(document.getElementById('ct-ia-renal-threshold').value) || 60;
+            localPolicy.mri = parseInt(document.getElementById('mri-threshold').value) || 30;
+            localStorage.setItem('plexuraPolicy', JSON.stringify(localPolicy));
+            updateUI();
+            closeModal(settingsModal, settingsContent);
+        };
+
+        resetSettings.onclick = () => {
+            localPolicy = { ...defaultPolicy };
+            localStorage.removeItem('plexuraPolicy');
+            updateUI();
+            closeModal(settingsModal, settingsContent);
+        };
+
+        // --- 2. Nephrotoxic Helper ---
+        const nephModal = document.getElementById('nephrotoxic-modal');
+        const nephContent = document.getElementById('nephrotoxic-modal-content');
+        document.getElementById('nephrotoxic-help').onclick = (e) => { e.preventDefault(); openModal(nephModal, nephContent); };
+        document.getElementById('close-nephrotoxic').onclick = () => closeModal(nephModal, nephContent);
+        document.getElementById('close-nephrotoxic-2').onclick = () => closeModal(nephModal, nephContent);
+
+        // --- 3. Core Logic & Calculation ---
+        
+        // Elements
+        const form = document.getElementById('advisor-form');
+        const creatEl = document.getElementById('creatinine');
+        const ageEl = document.getElementById('age');
+        const sexRadios = document.getElementsByName('sex');
+        const pregnantCheck = document.getElementById('is-pregnant');
+        
+        // Results Elements
+        const egfrEl = document.getElementById('egfr-result');
+        const card = document.getElementById('result-card');
+        const riskTitle = document.getElementById('risk-profile');
+        const recText = document.getElementById('recommendation');
+        const reportDiv = document.getElementById('report-text');
+
+        // CKD-EPI 2021 Formula
+        function calculateEGFR(cr, age, isFemale) {
+            if (!cr || !age || cr <= 0 || age <= 0) return null;
+            const k = isFemale ? 0.7 : 0.9;
+            const a = isFemale ? -0.241 : -0.302;
+            const min = Math.min(cr/k, 1);
+            const max = Math.max(cr/k, 1);
+            let egfr = 142 * Math.pow(min, a) * Math.pow(max, -1.200) * Math.pow(0.9938, age);
+            if (isFemale) egfr *= 1.012;
+            return Math.round(egfr);
+        }
+
+        // Helpers
+        const getVal = (name) => document.querySelector(`input[name="${name}"]:checked`).value;
+        const show = (id, msg) => { 
+            const el = document.getElementById(id); 
+            if (el) {
+                el.classList.remove('hidden'); 
+                const child = el.children[1]; // Assumes target is the second child
+                if(child) child.innerHTML = msg; 
             }
-            policyButton.addEventListener('click', () => { ctIvThresholdEl.value = localPolicy.ct_iv; ctIaOtherThresholdEl.value = localPolicy.ct_ia_other; ctIaRenalThresholdEl.value = localPolicy.ct_ia_renal; mriThresholdEl.value = localPolicy.mri; openModal(settingsModal, settingsModalContent); });
-            closeSettingsButton.addEventListener('click', () => closeModal(settingsModal, settingsModalContent));
-            saveSettingsButton.addEventListener('click', () => { localPolicy.ct_iv = parseInt(ctIvThresholdEl.value) || defaultPolicy.ct_iv; localPolicy.ct_ia_other = parseInt(ctIaOtherThresholdEl.value) || defaultPolicy.ct_ia_other; localPolicy.ct_ia_renal = parseInt(ctIaRenalThresholdEl.value) || defaultPolicy.ct_ia_renal; localPolicy.mri = parseInt(mriThresholdEl.value) || defaultPolicy.mri; localStorage.setItem('plexuraPolicy', JSON.stringify(localPolicy)); updatePolicyDisplay(); updateRecommendations(); closeModal(settingsModal, settingsModalContent); });
-            resetSettingsButton.addEventListener('click', () => { localPolicy = { ...defaultPolicy }; localStorage.removeItem('plexuraPolicy'); ctIvThresholdEl.value = defaultPolicy.ct_iv; ctIaOtherThresholdEl.value = defaultPolicy.ct_ia_other; ctIaRenalThresholdEl.value = defaultPolicy.ct_ia_renal; mriThresholdEl.value = defaultPolicy.mri; updatePolicyDisplay(); updateRecommendations(); closeModal(settingsModal, settingsModalContent); });
+        };
+        const hideAllGuides = () => ['guidance-main','guidance-renal','guidance-metformin','guidance-alternatives'].forEach(id => {
+             const el = document.getElementById(id);
+             if(el) el.classList.add('hidden');
+        });
+        const setStyle = (type) => {
+            card.className = `bg-white p-6 rounded-xl border-2 shadow-md ${type === 'safe' ? 'result-safe' : type === 'danger' ? 'result-danger' : 'result-caution'}`;
+            riskTitle.className = `text-2xl font-bold mb-4 ${type === 'safe' ? 'text-green-700' : type === 'danger' ? 'text-red-700' : 'text-yellow-700'}`;
+        };
 
-            // --- Nephrotoxic Modal Logic ---
-            const nephrotoxicHelpButton = document.getElementById('nephrotoxic-help');
-            const nephrotoxicModal = document.getElementById('nephrotoxic-modal');
-            const nephrotoxicModalContent = document.getElementById('nephrotoxic-modal-content');
-            const closeNephrotoxicButton = document.getElementById('close-nephrotoxic');
-            const closeNephrotoxicButton2 = document.getElementById('close-nephrotoxic-2');
-            nephrotoxicHelpButton.addEventListener('click', (e) => { e.preventDefault(); openModal(nephrotoxicModal, nephrotoxicModalContent); });
-            closeNephrotoxicButton.addEventListener('click', () => closeModal(nephrotoxicModal, nephrotoxicModalContent));
-            closeNephrotoxicButton2.addEventListener('click', () => closeModal(nephrotoxicModal, nephrotoxicModalContent));
+        // --- THE MEGA ALGORITHM ---
+        function updateUI() {
+            // 1. Input & Visibility
+            const proc = getVal('procedure');
+            const status = getVal('status');
+            const isFemale = document.querySelector('input[name="sex"][value="female"]').checked;
+            
+            // Show/Hide Sections
+            document.getElementById('ct-options').classList.toggle('hidden', proc !== 'ct');
+            document.getElementById('mri-options').classList.toggle('hidden', proc !== 'mri');
+            document.getElementById('dialysis-options').classList.toggle('hidden', !(status === 'dialysis' && proc === 'mri'));
+            document.getElementById('pregnancy-container').classList.toggle('hidden', !isFemale);
+            
+            if (!isFemale && pregnantCheck.checked) pregnantCheck.checked = false;
 
-             // --- Gemini Modal Logic (Commented Out for Offline) ---
-            /*
-            const geminiModal = document.getElementById('gemini-modal');
-            const geminiModalContent = document.getElementById('gemini-modal-content');
-            const closeGeminiButton = document.getElementById('close-gemini');
-            const closeGeminiButton2 = document.getElementById('close-gemini-2');
-            closeGeminiButton.addEventListener('click', () => closeModal(geminiModal, geminiModalContent));
-            closeGeminiButton2.addEventListener('click', () => closeModal(geminiModal, geminiModalContent));
-            */
+            // Update Policy Text
+            const isDef = JSON.stringify(localPolicy) === JSON.stringify(defaultPolicy);
+            policyButton.innerHTML = `Using ${isDef ? 'Default ACR v2024' : 'Local'} Guidelines (CT-IV < ${localPolicy.ct_iv}, MRI < ${localPolicy.mri}) <span class="font-semibold text-xs align-top ml-1 text-blue-600">EDIT</span>`;
 
-            // --- Clipboard.js Init ---
-            const copyButton = document.getElementById('copy-button');
-            // Check if ClipboardJS is defined (loaded locally)
-            if (typeof ClipboardJS !== 'undefined') {
-                const clipboard = new ClipboardJS('#copy-button');
-                const originalCopyText = copyButton.innerHTML;
-                clipboard.on('success', (e) => { copyButton.innerHTML = `<svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg>Copied!`; copyButton.classList.replace('bg-blue-600', 'bg-green-600'); copyButton.classList.remove('hover:bg-blue-700'); setTimeout(() => { copyButton.innerHTML = originalCopyText; copyButton.classList.replace('bg-green-600', 'bg-blue-600'); copyButton.classList.add('hover:bg-blue-700'); }, 2000); e.clearSelection(); });
-                clipboard.on('error', (e) => { console.error('Clipboard error:', e); alert('Failed to copy. Please copy manually.'); });
-            } else {
-                console.warn('Clipboard.js not loaded. Copy button will not function.');
-                copyButton.disabled = true;
-                 copyButton.textContent = 'Copy Unavailable (Offline)';
-                 copyButton.classList.add('opacity-50', 'cursor-not-allowed');
+            // 2. Get Data
+            const cr = parseFloat(creatEl.value);
+            const age = parseInt(ageEl.value);
+            const egfr = calculateEGFR(cr, age, isFemale);
+            
+            hideAllGuides();
+
+            if (!cr || !age || egfr === null) {
+                egfrEl.innerText = "--";
+                riskTitle.innerText = "AWAITING INPUT";
+                recText.innerText = "Please enter valid patient data.";
+                setStyle('caution');
+                updateReport({pat: 'N/A', egfr: 'N/A', risk: 'Awaiting Input', rec: 'Awaiting Input', notes:[]});
+                return;
+            }
+            egfrEl.innerText = egfr;
+
+            // Report Builder
+            let r = { pat: `${age}y ${isFemale?'F':'M'}, Cr ${cr}`, egfr: egfr, risk: '', rec: '', notes: [] };
+
+            // --- LOGIC PILLARS ---
+
+            // A. Fatal Risks (Overrides)
+            if (pregnantCheck.checked) {
+                setStyle('danger');
+                riskTitle.innerText = "HIGH RISK (FETAL EXPOSURE)";
+                if (proc === 'ct') {
+                    recText.innerText = "DEFER SCAN. Radiation risk to fetus.";
+                    show('guidance-main', "Iodinated contrast is low risk, but radiation is the primary concern. Defer until post-partum unless life-threatening.");
+                    show('guidance-alternatives', "Ultrasound or Non-contrast MRI.");
+                } else {
+                    recText.innerText = "CONTRAINDICATED. GBCMs cross placenta.";
+                    show('guidance-main', "Gadolinium crosses the placenta and is re-circulated by the fetus, leading to prolonged exposure. Avoid unless absolutely essential.");
+                    show('guidance-alternatives', "Non-contrast MRI or Ultrasound.");
+                }
+                r.risk = "HIGH RISK (Pregnancy)"; r.rec = recText.innerText; updateReport(r); return;
             }
 
-
-            // --- Form DOM Elements ---
-            const form = document.getElementById('advisor-form');
-            const creatinineEl = document.getElementById('creatinine');
-            const ageEl = document.getElementById('age');
-            const mriOptions = document.getElementById('mri-options');
-            const ctOptions = document.getElementById('ct-options');
-            const dialysisOptions = document.getElementById('dialysis-options');
-            const sexFemaleEl = document.getElementById('sex-female');
-            const sexMaleEl = document.getElementById('sex-male'); // Added
-            const pregnancyOptionContainer = document.getElementById('pregnancy-option-container');
-            const isPregnantEl = document.getElementById('is-pregnant');
-            const egfrResultEl = document.getElementById('egfr-result');
-            const resultCard = document.getElementById('result-card');
-            const riskProfileEl = document.getElementById('risk-profile');
-            const recommendationEl = document.getElementById('recommendation');
-            const guidanceMain = document.getElementById('guidance-main');
-            const guidanceRenal = document.getElementById('guidance-renal');
-            const guidanceMetformin = document.getElementById('guidance-metformin');
-            const guidanceAlternatives = document.getElementById('guidance-alternatives');
-            const reportTextEl = document.getElementById('report-text');
-            // const explainButton = document.getElementById('explain-button'); // Commented out
-            // const alternativesButton = document.getElementById('alternatives-button'); // Commented out
-
-            // --- Event Listeners ---
-            form.addEventListener('input', updateRecommendations);
-            // explainButton.addEventListener('click', handleGeminiExplain); // Commented out
-            // alternativesButton.addEventListener('click', handleGeminiAlternatives); // Commented out
-
-            // --- UI Show/Hide Logic ---
-            function toggleConditionalUI() {
-                const procedure = getFormValue('procedure');
-                const status = getFormValue('status');
-                mriOptions.classList.toggle('hidden', procedure !== 'mri');
-                ctOptions.classList.toggle('hidden', procedure === 'mri');
-                dialysisOptions.classList.toggle('hidden', !(status === 'dialysis' && procedure === 'mri'));
-                pregnancyOptionContainer.classList.toggle('hidden', !sexFemaleEl.checked);
-                if (sexMaleEl.checked && isPregnantEl.checked) { isPregnantEl.checked = false; } // Corrected logic check
-                const warningIcon = isPregnantEl.labels[0].querySelector('svg');
-                warningIcon.style.display = isPregnantEl.checked ? 'block' : 'none';
-                // explainButton.disabled = !creatinineEl.value || !ageEl.value; // Commented out
+            if (getVal('reaction') === 'yes') {
+                setStyle('danger');
+                riskTitle.innerText = "HIGH RISK (ANAPHYLAXIS)";
+                recText.innerText = "STOP. History of moderate/severe reaction.";
+                show('guidance-main', "Consult radiologist. A different contrast class (CT vs MRI) might be safe. Premedication protocol is required.");
+                r.risk = "HIGH RISK (Prior Reaction)"; r.rec = recText.innerText; updateReport(r); return;
             }
 
-            // --- Helper Functions ---
-            const getFormValue = (name) => document.querySelector(`input[name="${name}"]:checked`).value;
-            const clearGuidance = () => { [guidanceMain, guidanceRenal, guidanceMetformin, guidanceAlternatives].forEach(el => el.classList.add('hidden')); };
-            const showGuidance = (el, text) => { el.classList.remove('hidden'); el.children[1].innerHTML = text; };
-            const setRisk = (cardClass, profileText, profileClass) => { resultCard.className = `p-5 rounded-xl border-2 ${cardClass}`; riskProfileEl.textContent = profileText; riskProfileEl.className = `text-xl font-bold ${profileClass}`; };
-
-            // --- Calculation ---
-            function calculateCKDEPI(creat_mgdl, age, isFemale) {
-                 if (!creat_mgdl || !age || creat_mgdl <= 0 || age <= 0) return null;
-                const k = isFemale ? 0.7 : 0.9, alpha = isFemale ? -0.241 : -0.302;
-                const min_cr_k = Math.min(creat_mgdl / k, 1), max_cr_k = Math.max(creat_mgdl / k, 1);
-                let egfr = 142 * Math.pow(min_cr_k, alpha) * Math.pow(max_cr_k, -1.200) * Math.pow(0.9938, age);
-                if (isFemale) { egfr *= 1.012; }
-                return Math.round(egfr);
+            if (getVal('fasting') === 'no') {
+                setStyle('caution');
+                riskTitle.innerText = "MODERATE RISK (ASPIRATION)";
+                recText.innerText = "DEFER ELECTIVE SCAN. Not ASA Compliant.";
+                show('guidance-main', "Patient has not met NPO guidelines (6h solids / 2h clears). Aspiration risk if vomiting occurs. Reschedule elective scan.");
+                show('guidance-alternatives', "If scan is emergent, proceed with caution and inform team of aspiration risk.");
+                r.risk = "MODERATE (Fasting Non-compliant)"; r.rec = recText.innerText; updateReport(r); return;
             }
 
-             // --- Gemini Functions (Commented Out for Offline) ---
-             /*
-             async function callGeminiApi(prompt, systemInstruction = null) {
-                 // ... API call logic ...
-             }
-             function handleGeminiExplain() {
-                 // ... Explain logic ...
-             }
-             function handleGeminiAlternatives() {
-                // ... Alternatives logic ...
-             }
-             function getCurrentReportAndRec() {
-                // ... Report parsing logic ...
-             }
-             function generateExplanationFocus(riskProfile, recommendation) {
-                // ... Prompt tailoring logic ...
-             }
-            */
-
-            // --- Main Logic ---
-            function updateRecommendations() {
-                toggleConditionalUI();
-                const creat = parseFloat(creatinineEl.value), age = parseInt(ageEl.value);
-                const isFemale = getFormValue('sex') === 'female', sexText = isFemale ? 'Female' : 'Male';
-                const egfr = calculateCKDEPI(creat, age, isFemale);
-                const reaction = getFormValue('reaction'), fasting = getFormValue('fasting');
-                const isPregnant = isPregnantEl.checked;
-                const isMetformin = document.getElementById('is-metformin').checked;
-                const isNephrotoxic = document.getElementById('is-nephrotoxic').checked;
-                const isSingleKidney = document.getElementById('is-single-kidney').checked;
-                const status = getFormValue('status'), procedure = getFormValue('procedure');
-                const ct_route = getFormValue('ct_route'), gbcm = getFormValue('gbcm');
-                const isDialysisHighDose = document.getElementById('dialysis-high-dose').checked;
-                const isDialysisDelayed = document.getElementById('dialysis-delayed').checked;
-
-                clearGuidance();
-                // alternativesButton.classList.add('hidden'); // Commented out
-
-                if (!creat || !age || egfr === null) { // Check egfr calculation result too
-                    egfrResultEl.textContent = egfr === null && creat && age ? "Invalid Input" : "--";
-                    setRisk('result-caution', 'AWAITING INPUT', 'text-yellow-700');
-                    recommendationEl.textContent = 'Please enter valid patient data and verify safety checklist.';
-                    reportTextEl.innerText = "Awaiting valid input.";
-                    // explainButton.disabled = true; // Commented out
-                    return;
-                }
-                egfrResultEl.textContent = egfr;
-                // explainButton.disabled = false; // Commented out
-
-                let report = { patient: `${age} y/o ${sexText}, Cr ${creat} mg/dL`, egfr: `eGFR: ${egfr} mL/min/1.73m²`, status: '', procedure: '', risk: '', recommendation: '', notes: [] };
-                let showAlternatives = false;
-
-                // --- PILLAR 1: IMMEDIATE FATAL RISK ---
-                 if (isPregnant) {
-                    report.status = "PREGNANT"; report.procedure = procedure === 'ct' ? "CT" : "MRI"; setRisk('result-danger', 'HIGH RISK (FETAL EXPOSURE)', 'text-red-700');
-                    if (procedure === 'ct') { recommendationEl.textContent = 'DEFER SCAN (Radiation).'; showGuidance(guidanceMain, 'ICM low risk, but scan deferred.'); showGuidance(guidanceAlternatives, 'US or non-contrast MRI.'); report.risk = "HIGH RISK (Fetal Radiation)"; report.recommendation = "DEFER SCAN. Discuss w/ OBGYN."; }
-                    else { recommendationEl.textContent = 'CONTRAINDICATED (GBCM).'; showGuidance(guidanceMain, 'GBCMs cross placenta, trapped.'); showGuidance(guidanceAlternatives, 'Non-contrast MRI or US.'); report.risk = "HIGH RISK (Fetal GBCM Exposure)"; report.recommendation = "CONTRAINDICATED. Defer post-partum."; }
-                    showAlternatives = true; finalizeReport(report); return;
-                }
-                if (reaction === 'yes') {
-                    report.status = "History of Mod/Severe Reaction"; report.procedure = procedure === 'ct' ? "CT" : "MRI"; setRisk('result-danger', 'HIGH RISK (ANAPHYLAXIS)', 'text-red-700');
-                    recommendationEl.textContent = 'STOP. HIGH RISK for severe reaction.'; showGuidance(guidanceMain, 'Consult radiologist re: safety of different contrast class.'); showGuidance(guidanceAlternatives, 'Consult radiologist for pre-med protocol OR switch modality.'); report.risk = "HIGH RISK (Anaphylaxis)"; report.recommendation = "STOP. Consult radiologist.";
-                    showAlternatives = true; finalizeReport(report); return;
-                }
-                if (fasting === 'no') {
-                    report.status = "Not ASA Fasting Compliant"; report.procedure = "Elective Procedure"; setRisk('result-caution', 'MODERATE RISK (ASPIRATION)', 'text-yellow-700');
-                    recommendationEl.textContent = 'DEFER ELECTIVE SCAN (Aspiration Risk).'; showGuidance(guidanceMain, 'Reschedule when NPO protocol (6h solids/2h clears) is met.'); showGuidance(guidanceAlternatives, 'If emergent, proceed with caution (suction ready).'); report.risk = "MODERATE RISK (Aspiration)"; report.recommendation = "DEFER ELECTIVE SCAN. Reschedule when NPO.";
-                    finalizeReport(report); return;
-                }
-
-                // --- PILLAR 2: RENAL STATUS ---
-                 if (status === 'dialysis') {
-                    report.status = "On Dialysis (ESRD)"; report.egfr = "eGFR: N/A"; report.notes.push("Renal Policy: N/A.");
-                    if (procedure === 'ct') { setRisk('result-safe', 'LOW RISK (RENAL)', 'text-green-700'); recommendationEl.textContent = 'PROCEED (ICM safe). No urgent dialysis needed.'; report.procedure = "CT w/ ICM"; report.risk = "LOW RISK (No PC-AKI)"; report.recommendation = "PROCEED. Normal dialysis schedule."; if (isMetformin) { showGuidance(guidanceMetformin, 'No hold needed.'); report.notes.push('Metformin: No hold required.'); }}
-                    else { report.procedure = `MRI w/ ${gbcm.toUpperCase()} GBCM`;
-                        if (gbcm === 'group1' || gbcm === 'group3') { setRisk('result-danger', 'HIGH RISK (NSF)', 'text-red-700'); recommendationEl.textContent = 'CONTRAINDICATED (Group I/III).'; showGuidance(guidanceAlternatives, 'Switch to Group II or alt modality.'); report.risk = "HIGH RISK (NSF)"; report.recommendation = "CONTRAINDICATED. Switch GBCM/modality."; showAlternatives = true; }
-                        else { if (isDialysisHighDose || isDialysisDelayed) { setRisk('result-caution', 'MODERATE RISK (THEORETICAL NSF)', 'text-yellow-700'); recommendationEl.textContent = 'PROCEED W/ CAUTION (High Dose / >24h Dwell).'; showGuidance(guidanceMain, 'ACR: Grp II low risk. **Recommend dialysis < 24h.** Consent.'); report.risk = "MODERATE RISK (Theoretical NSF)"; report.recommendation = "PROCEED W/ CAUTION. Recommend dialysis < 24h. Consent."; }
-                            else { setRisk('result-safe', 'LOW RISK (NSF)', 'text-green-700'); recommendationEl.textContent = 'PROCEED (Group II safe).'; report.risk = "LOW RISK (NSF)"; report.recommendation = "PROCEED. Normal dialysis schedule."; }
+            // B. Renal Risks
+            const isMetformin = document.getElementById('is-metformin').checked;
+            
+            if (status === 'dialysis') {
+                r.pat += " (Dialysis)";
+                if (proc === 'ct') {
+                    setStyle('safe');
+                    riskTitle.innerText = "LOW RISK (RENAL)";
+                    recText.innerText = "PROCEED. Iodinated contrast is safe.";
+                    show('guidance-renal', "No urgent dialysis needed. Continue normal schedule.");
+                    if(isMetformin) { show('guidance-metformin', "No hold required (Dialysis patient)."); r.notes.push("Metformin: No hold required.") }
+                } else {
+                    const gbcm = getVal('gbcm');
+                    if (gbcm !== 'group2') {
+                        setStyle('danger');
+                        riskTitle.innerText = "HIGH RISK (NSF)";
+                        recText.innerText = "CONTRAINDICATED. Use Group II only.";
+                        show('guidance-alternatives', "Switch to Group II (Macrocyclic) GBCM or use non-contrast MRI.");
+                    } else {
+                        const highDose = document.getElementById('dialysis-high-dose').checked;
+                        const delayed = document.getElementById('dialysis-delayed').checked;
+                        if (highDose || delayed) {
+                            setStyle('caution');
+                            riskTitle.innerText = "MODERATE RISK (Theor. NSF)";
+                            recText.innerText = "PROCEED W/ CAUTION. Dialysis recommended < 24h.";
+                            show('guidance-main', "High dose or long dwell time increases theoretical risk of GBCM dissociation. Obtain consent.");
+                            r.notes.push("Recommend dialysis < 24h post-scan.");
+                        } else {
+                            setStyle('safe');
+                            riskTitle.innerText = "LOW RISK (NSF)";
+                            recText.innerText = "PROCEED. Group II safe.";
+                            show('guidance-main', "Standard dose Group II GBCM is safe. Continue normal dialysis schedule.");
                         }
                     }
-                    finalizeReport(report); return;
-                 }
-                 if (status === 'aki') {
-                    report.status = "AKI"; report.egfr = "eGFR: N/A (Invalid)"; report.notes.push("Renal Policy: N/A.");
-                    if (procedure === 'ct') { setRisk('result-danger', 'HIGH RISK for PC-AKI', 'text-red-700'); recommendationEl.textContent = 'DEFER SCAN if possible.'; showGuidance(guidanceMain, 'If unavoidable: low dose, hydrate, hold nephrotoxins, consent.'); showGuidance(guidanceAlternatives, 'Non-contrast CT/MRI, US.'); report.procedure = "CT w/ ICM"; report.risk = "HIGH RISK (PC-AKI)"; report.recommendation = "DEFER. If unavoidable, use precautions."; if (isMetformin) { showGuidance(guidanceMetformin, 'Metformin CONTRAINDICATED. Ensure held.'); report.notes.push('Metformin: HOLD (Contraindicated).'); } showAlternatives = true; }
-                     else { report.procedure = `MRI w/ ${gbcm.toUpperCase()} GBCM`;
-                        if (gbcm === 'group1' || gbcm === 'group3') { setRisk('result-danger', 'HIGH RISK (NSF)', 'text-red-700'); recommendationEl.textContent = 'CONTRAINDICATED (Group I/III).'; showGuidance(guidanceAlternatives, 'Switch to Group II or alt modality.'); report.risk = "HIGH RISK (NSF)"; report.recommendation = "CONTRAINDICATED. Switch GBCM/modality."; showAlternatives = true; }
-                        else { setRisk('result-caution', 'CAUTION ADVISED', 'text-yellow-700'); recommendationEl.textContent = 'PROCEED W/ CAUTION (Group II in AKI).'; showGuidance(guidanceMain, 'ACR: No proven NSF w/ Grp II, but high-risk. Defer if possible. Lowest dose, consent.'); report.risk = "CAUTION (High-risk pop.)"; report.recommendation = "PROCEED W/ CAUTION. Use Group II lowest dose. Defer if possible."; }
-                     }
-                    finalizeReport(report); return;
-                 }
-
-                // --- 2C. Standard Patients ---
-                report.status = "Standard Patient"; report.notes.push(`Renal Policy (Local): CT-IV < ${localPolicy.ct_iv}, MRI < ${localPolicy.mri}`);
-                hydration_consent_required = false; riskReason = "";
-                const hasComorbidities = isNephrotoxic || isSingleKidney;
-
-                if (procedure === 'ct') {
-                    report.procedure = `CT w/ ICM (${ct_route.toUpperCase()})`;
-                    let threshold = localPolicy.ct_iv;
-                    if (ct_route === 'ia_renal') threshold = localPolicy.ct_ia_renal;
-                    else if (ct_route === 'ia_other') threshold = localPolicy.ct_ia_other;
-
-                    if (egfr < threshold) { hydration_consent_required = true; riskReason = `(eGFR < ${threshold} for ${ct_route.toUpperCase()})`; }
-                    else if (egfr < (threshold + 15) && hasComorbidities) { hydration_consent_required = true; riskReason = `(eGFR < ${threshold + 15} + Comorbidities)`; }
-
-                    if (hydration_consent_required) { setRisk('result-caution', 'MODERATE RISK for PC-AKI', 'text-yellow-700'); recommendationEl.textContent = 'PROCEED W/ CAUTION. Consent required.'; showGuidance(guidanceRenal, 'Recommend IV hydration & holding nephrotoxins.'); showGuidance(guidanceAlternatives, 'Non-contrast CT/MRI, US.'); report.risk = `MODERATE RISK ${riskReason}`; report.recommendation = "MODERATE RISK. Recommend IV hydration, consent, hold nephrotoxins."; showAlternatives = true; }
-                    else { setRisk('result-safe', 'LOW RISK for PC-AKI', 'text-green-700'); recommendationEl.textContent = 'PROCEED. Low risk. No hydration needed.'; report.risk = "LOW RISK"; report.recommendation = "PROCEED. No hydration needed."; }
-
-                    if (isMetformin) {
-                        const isIA = ct_route.includes('ia_');
-                        if (egfr < 30 || isIA) { const txt = 'Hold Metformin @ procedure + 48h. Recheck renal fxn before restart.'; showGuidance(guidanceMetformin, txt); report.notes.push(`Metformin: HOLD. ${txt}`); }
-                        else { const txt = 'No need to hold Metformin (eGFR ≥ 30 & IV).'; showGuidance(guidanceMetformin, txt); report.notes.push(`Metformin: No hold required.`); }
-                    }
-
-                } else { // MRI
-                    report.procedure = `MRI w/ ${gbcm.toUpperCase()} GBCM`;
-                    if (egfr >= localPolicy.mri) {
-                         if (gbcm === 'group1' || gbcm === 'group3') { setRisk('result-danger', 'RISK of NSF', 'text-red-700'); recommendationEl.textContent = 'AVOID (Group I/III).'; showGuidance(guidanceAlternatives, 'Switch to Group II.'); report.risk = "RISK of NSF"; report.recommendation = "AVOID. Switch to Group II."; showAlternatives = true; }
-                        else { setRisk('result-safe', 'LOW RISK (NSF)', 'text-green-700'); recommendationEl.textContent = 'PROCEED (Group II safe).'; report.risk = "LOW RISK (NSF)"; report.recommendation = "PROCEED."; }
-                    } else { // eGFR < localPolicy.mri
-                        if (gbcm === 'group1' || gbcm === 'group3') { setRisk('result-danger', 'HIGH RISK (NSF)', 'text-red-700'); recommendationEl.textContent = 'CONTRAINDICATED (Group I/III).'; showGuidance(guidanceAlternatives, 'Switch to Group II or alt modality.'); report.risk = "HIGH RISK (NSF)"; report.recommendation = "CONTRAINDICATED. Switch GBCM/modality."; showAlternatives = true; }
-                        else { setRisk('result-caution', 'LOW RISK (NSF)', 'text-yellow-700'); recommendationEl.textContent = 'PROCEED W/ CAUTION (Group II).'; showGuidance(guidanceMain, 'ACR: Grp II safe, but high-risk pop. Use standard dose, consent.'); report.risk = "LOW RISK (NSF)"; report.recommendation = "PROCEED W/ CAUTION. Use Group II std dose. Consent."; }
-                    }
-                    if (isMetformin) { report.notes.push('Metformin: No hold required for GBCM.'); }
                 }
-                finalizeReport(report);
-                // alternativesButton.classList.toggle('hidden', !showAlternatives); // Commented out
-            } // End updateRecommendations
-
-            function finalizeReport(report) {
-                const notesText = report.notes.length > 0 ? report.notes.join('\n') : '';
-                const text = `**Plexura Universal Safety Advisor**\nPatient: ${report.patient}\n${report.egfr}\nStatus: ${report.status}\nProcedure: ${report.procedure}\n---\nRisk Profile: ${report.risk}\nRecommendation: ${report.recommendation}\n---\n${notesText ? 'Notes:\n' + notesText + '\n' : ''}(Tool advises based on selected inputs. Clinical judgment prevails.)`.trim();
-                reportTextEl.innerText = text;
+                r.risk = riskTitle.innerText; r.rec = recText.innerText; updateReport(r); return;
             }
 
-            // --- Initial Call ---
-            updatePolicyDisplay();
-            updateRecommendations(); // Run once on load
-        });
+            if (status === 'aki') {
+                r.pat += " (AKI)";
+                r.egfr = "N/A (Invalid in AKI)";
+                if (proc === 'ct') {
+                    setStyle('danger');
+                    riskTitle.innerText = "HIGH RISK (PC-AKI)";
+                    recText.innerText = "DEFER SCAN. Renal function unstable.";
+                    show('guidance-main', "If scan is emergent: Low dose, IV hydration, Hold all nephrotoxins.");
+                    show('guidance-alternatives', "Non-contrast CT, Ultrasound, or non-contrast MRI.");
+                    if(isMetformin) { show('guidance-metformin', "HOLD METFORMIN (Contraindicated in AKI)."); r.notes.push("Metformin: HOLD (AKI)."); }
+                } else {
+                    const gbcm = getVal('gbcm');
+                    if (gbcm !== 'group2') {
+                        setStyle('danger');
+                        riskTitle.innerText = "HIGH RISK (NSF)";
+                        recText.innerText = "CONTRAINDICATED. Use Group II only.";
+                        show('guidance-alternatives', "Switch to Group II GBCM or use non-contrast MRI.");
+                    } else {
+                        setStyle('caution');
+                        riskTitle.innerText = "CAUTION ADVISED";
+                        recText.innerText = "PROCEED W/ CAUTION. High-risk population.";
+                        show('guidance-main', "ACR: Group II safe, but this is a high-risk population. Defer if possible, use standard dose, obtain consent.");
+                    }
+                }
+                r.risk = riskTitle.innerText; r.rec = recText.innerText; updateReport(r); return;
+            }
+
+            // C. Standard Patient (eGFR Logic)
+            if (proc === 'ct') {
+                const route = getVal('ct_route');
+                const hasRiskFactors = document.getElementById('is-nephrotoxic').checked || document.getElementById('is-single-kidney').checked;
+                
+                let thresh = localPolicy.ct_iv;
+                if (route === 'ia_other') thresh = localPolicy.ct_ia_other;
+                if (route === 'ia_renal') thresh = localPlayer.ct_ia_renal; // Bug: Changed to localPolicy
+
+                let needsPrep = false;
+                let riskReason = "";
+                if (egfr < thresh) {
+                    needsPrep = true;
+                    riskReason = `(eGFR < ${thresh})`;
+                } else if (egfr < (thresh + 15) && hasRiskFactors) {
+                    needsPrep = true;
+                    riskReason = `(eGFR < ${thresh + 15} + Comorbidities)`;
+                }
+
+                if (needsPrep) {
+                    setStyle('caution');
+                    riskTitle.innerText = `MODERATE RISK ${riskReason}`;
+                    recText.innerText = "PROCEED W/ CAUTION. Hydration & Consent.";
+                    show('guidance-renal', `Prophylactic IV hydration (e.g., 0.9% NaCl) is recommended. Hold nephrotoxins if possible.`);
+                } else {
+                    setStyle('safe');
+                    riskTitle.innerText = "LOW RISK";
+                    recText.innerText = "PROCEED. No hydration required.";
+                }
+
+                if (isMetformin) {
+                    const isIA = route.includes('ia_');
+                    if (egfr < 30 || isIA) {
+                        show('guidance-metformin', "HOLD 48 HOURS. Restart after stable renal function.");
+                        r.notes.push("Metformin: HOLD 48h.");
+                    } else {
+                        show('guidance-metformin', "NO HOLD REQUIRED (eGFR ≥ 30 & IV).");
+                    }
+                }
+
+            } else { // MRI
+                const gbcm = getVal('gbcm');
+                if (egfr < localPolicy.mri) {
+                    if (gbcm !== 'group2') {
+                        setStyle('danger');
+                        riskTitle.innerText = "HIGH RISK (NSF)";
+                        recText.innerText = "CONTRAINDICATED. Switch to Group II.";
+                        show('guidance-alternatives', "Use Group II (Macrocyclic) GBCM or non-contrast MRI.");
+                    } else {
+                        setStyle('caution');
+                        riskTitle.innerText = "LOW RISK (NSF)";
+                        recText.innerText = "PROCEED W/ CAUTION. Standard dose.";
+                        show('guidance-main', "ACR: Group II is safe, but eGFR is low. Use standard dose and obtain consent.");
+                    }
+                } else {
+                    if (gbcm !== 'group2') {
+                        setStyle('danger'); // Even with good eGFR, avoiding Group 1 is modern standard
+                        riskTitle.innerText = "RISK WARNING (NSF)";
+                        recText.innerText = "AVOID Group I/III. Switch to Group II.";
+                        show('guidance-main', "Even with normal eGFR, Group I/III agents are associated with gadolinium retention and should be avoided per modern standards.");
+                    } else {
+                        setStyle('safe');
+                        riskTitle.innerText = "LOW RISK (NSF)";
+                        recText.innerText = "PROCEED.";
+                    }
+                }
+            }
+
+            r.risk = riskTitle.innerText;
+            r.rec = recText.innerText;
+            // Collect visible notes
+            ['guidance-main','guidance-renal','guidance-metformin'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && !el.classList.contains('hidden')) {
+                    const textChild = el.children[1];
+                    if (textChild) r.notes.push(textChild.innerText);
+                }
+            });
+            updateReport(r);
+        }
+
+        function updateReport(r) {
+            const notes = r.notes.length ? `\nNotes: ${r.notes.join(' | ')}` : '';
+            const txt = `**Plexura Safety Advisor**\nPt: ${r.pat}, eGFR: ${r.egfr}\nStatus: ${r.status || 'Standard'}\nRisk: ${r.risk}\nRec: ${r.rec}${notes}\n(Clinical judgment prevails.)`;
+            document.getElementById('report-text').innerText = txt;
+        }
+
+        form.addEventListener('input', updateUI);
+        
+        // Clipboard Logic
+        const copyBtn = document.getElementById('copy-button');
+        const copyIcon = document.getElementById('copy-icon');
+        if (typeof ClipboardJS !== 'undefined') {
+            const cb = new ClipboardJS('#copy-button');
+            cb.on('success', (e) => {
+                const oldText = copyBtn.innerHTML;
+                copyBtn.innerHTML = "✅ Copied!";
+                copyBtn.classList.replace('bg-blue-600', 'bg-green-600');
+                copyBtn.classList.remove('hover:bg-blue-700');
+                setTimeout(() => { 
+                    copyBtn.innerHTML = oldText;
+                    copyBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                    copyBtn.classList.add('hover:bg-blue-700');
+                }, 2000);
+                e.clearSelection();
+            });
+            cb.on('error', (e) => {
+                alert('Copy failed. Please copy manually.');
+            });
+        } else {
+            console.warn('Clipboard.js not loaded. Copy button disabled.');
+            copyBtn.disabled = true;
+            copyBtn.innerHTML = "Copy Unavailable";
+            copyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Init
+        updateUI();
+    });
     </script>
 </body>
 </html>
-```eof
-
