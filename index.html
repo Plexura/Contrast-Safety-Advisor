@@ -20,20 +20,21 @@
         /* Custom Form Styles */
         input[type="radio"]:checked + label,
         input[type="checkbox"]:checked + label { 
-            border-color: #2563eb; 
-            background-color: #eff6ff; 
+            border-color: #2563eb; /* blue-600 */
+            background-color: #eff6ff; /* blue-50 */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
         
         /* Risk Warning Styles */
         input[type="radio"][data-risk="true"]:checked + label { 
-            border-color: #f59e0b; 
-            background-color: #fffbeb; 
+            border-color: #f59e0b; /* yellow-500 */
+            background-color: #fffbeb; /* yellow-50 */
         }
         
         /* Danger Warning Styles */
         input[type="radio"][data-danger="true"]:checked + label { 
-            border-color: #ef4444; 
-            background-color: #fef2f2; 
+            border-color: #ef4444; /* red-500 */
+            background-color: #fef2f2; /* red-50 */
         }
         
         input[type="radio"], input[type="checkbox"] { display: none; }
@@ -49,6 +50,16 @@
         
         /* Header Interaction */
         #policy-button { transition: background-color 0.15s ease-in-out; }
+
+        /* Hide number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-4 md:p-8 text-gray-800">
@@ -240,6 +251,30 @@
                 <fieldset class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <legend class="text-lg font-bold text-gray-900 border-b pb-1 w-full">3. Clinical Safety Checklist</legend>
                     <p class="text-xs text-gray-500 mb-2">Defaults are set for a standard, low-risk patient. Verify all.</p>
+                    
+                    <!-- NEW SEDATION QUESTION -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Requires Sedation?</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="radio" name="sedation" value="no" id="sedation-no" checked>
+                            <label for="sedation-no" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">No (Standard Scan)</label>
+                            
+                            <input type="radio" name="sedation" value="yes" id="sedation-yes" data-risk="true">
+                            <label for="sedation-yes" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">Yes</label>
+                        </div>
+                    </div>
+
+                    <!-- CONDITIONAL FASTING QUESTION -->
+                    <div id="fasting-container" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ASA Fasting Compliant? <span class="font-normal text-gray-500">(6h solids / 2h clears)</span></label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="radio" name="fasting" value="yes" id="fasting-yes" checked>
+                            <label for="fasting-yes" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">Yes</label>
+                            
+                            <input type="radio" name="fasting" value="no" id="fasting-no" data-risk="true">
+                            <label for="fasting-no" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">No</label>
+                        </div>
+                    </div>
 
                     <!-- Reaction -->
                     <div>
@@ -250,18 +285,6 @@
                             
                             <input type="radio" name="reaction" value="yes" id="reaction-yes" data-danger="true">
                             <label for="reaction-yes" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">Yes (Mod/Severe)</label>
-                        </div>
-                    </div>
-
-                    <!-- Fasting -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ASA Fasting Compliant? <span class="font-normal text-gray-500">(6h solids / 2h clears)</span></label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="radio" name="fasting" value="yes" id="fasting-yes" checked>
-                            <label for="fasting-yes" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">Yes</label>
-                            
-                            <input type="radio" name="fasting" value="no" id="fasting-no" data-risk="true">
-                            <label for="fasting-no" class="text-center py-2 border rounded-md cursor-pointer text-sm font-medium text-gray-700 bg-white">No</label>
                         </div>
                     </div>
 
@@ -502,14 +525,20 @@
             const proc = getVal('procedure');
             const status = getVal('status');
             const isFemale = document.querySelector('input[name="sex"][value="female"]').checked;
+            const isSedation = getVal('sedation') === 'yes'; // ** NEW SEDATION LOGIC **
             
             // Show/Hide Sections
             document.getElementById('ct-options').classList.toggle('hidden', proc !== 'ct');
             document.getElementById('mri-options').classList.toggle('hidden', proc !== 'mri');
             document.getElementById('dialysis-options').classList.toggle('hidden', !(status === 'dialysis' && proc === 'mri'));
             document.getElementById('pregnancy-container').classList.toggle('hidden', !isFemale);
+            document.getElementById('fasting-container').classList.toggle('hidden', !isSedation); // ** NEW FASTING LOGIC **
             
             if (!isFemale && pregnantCheck.checked) pregnantCheck.checked = false;
+            if (!isSedation && getVal('fasting') === 'no') { 
+                // If user toggles sedation off, reset fasting to "yes" to avoid false flag
+                document.getElementById('fasting-yes').checked = true;
+            }
 
             // Update Policy Text
             const isDef = JSON.stringify(localPolicy) === JSON.stringify(defaultPolicy);
@@ -561,13 +590,14 @@
                 r.risk = "HIGH RISK (Prior Reaction)"; r.rec = recText.innerText; updateReport(r); return;
             }
 
-            if (getVal('fasting') === 'no') {
+            // ** NEW "ELITE" FASTING LOGIC **
+            if (isSedation && getVal('fasting') === 'no') {
                 setStyle('caution');
                 riskTitle.innerText = "MODERATE RISK (ASPIRATION)";
                 recText.innerText = "DEFER ELECTIVE SCAN. Not ASA Compliant.";
-                show('guidance-main', "Patient has not met NPO guidelines (6h solids / 2h clears). Aspiration risk if vomiting occurs. Reschedule elective scan.");
+                show('guidance-main', "Patient requires sedation but has not met NPO guidelines (6h solids / 2h clears). High aspiration risk. Reschedule elective scan.");
                 show('guidance-alternatives', "If scan is emergent, proceed with caution and inform team of aspiration risk.");
-                r.risk = "MODERATE (Fasting Non-compliant)"; r.rec = recText.innerText; updateReport(r); return;
+                r.risk = "MODERATE (Fasting Non-compliant for Sedation)"; r.rec = recText.innerText; updateReport(r); return;
             }
 
             // B. Renal Risks
@@ -642,7 +672,7 @@
                 
                 let thresh = localPolicy.ct_iv;
                 if (route === 'ia_other') thresh = localPolicy.ct_ia_other;
-                if (route === 'ia_renal') thresh = localPlayer.ct_ia_renal; // Bug: Changed to localPolicy
+                if (route === 'ia_renal') thresh = localPolicy.ct_ia_renal; 
 
                 let needsPrep = false;
                 let riskReason = "";
@@ -663,6 +693,7 @@
                     setStyle('safe');
                     riskTitle.innerText = "LOW RISK";
                     recText.innerText = "PROCEED. No hydration required.";
+                    show('guidance-main', "Per ACR, ensure patient is hydrated. No prophylactic IV fluids needed.");
                 }
 
                 if (isMetformin) {
@@ -718,7 +749,13 @@
 
         function updateReport(r) {
             const notes = r.notes.length ? `\nNotes: ${r.notes.join(' | ')}` : '';
-            const txt = `**Plexura Safety Advisor**\nPt: ${r.pat}, eGFR: ${r.egfr}\nStatus: ${r.status || 'Standard'}\nRisk: ${r.risk}\nRec: ${r.rec}${notes}\n(Clinical judgment prevails.)`;
+            // Tweak report format for clarity
+            const txt = `**Plexura Safety Advisor**
+Patient: ${r.pat}, eGFR: ${r.egfr}
+Status: ${r.status || 'Standard'}
+Risk: ${r.risk}
+Rec: ${r.rec}${notes}
+(Clinical judgment prevails.)`;
             document.getElementById('report-text').innerText = txt;
         }
 
@@ -757,3 +794,5 @@
     </script>
 </body>
 </html>
+
+
